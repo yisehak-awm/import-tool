@@ -1,86 +1,145 @@
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import {
-  addEdge,
   Background,
   BackgroundVariant,
   Controls,
+  Edge,
   MarkerType,
+  Node,
   ReactFlow,
-  ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  useReactFlow,
 } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
 import { BasicNode } from "./node";
 import BasicEdge from "./edge";
+import { nanoid } from "nanoid";
 
 const nodeTypes = {
-  basic: BasicNode,
+  custom: BasicNode,
 };
 
 const edgeTypes = {
-  basic: BasicEdge,
+  custom: BasicEdge,
 };
 
-const initialNodes = [
+export type NodeData = {
+  name?: string;
+  properties: {
+    [key: string]: {
+      name: string;
+      col: string;
+      type: string;
+    };
+  };
+};
+
+export type EdgeData = {
+  [key: string]: {
+    name?: string;
+    reversed?: boolean;
+    properties: {
+      [key: string]: {
+        name: string;
+        col: string;
+        type: string;
+      };
+    };
+  };
+};
+
+const initialNodes: Node<NodeData>[] = [
   {
     id: "1",
     position: { x: 0, y: 0 },
-    data: { name: "Gene" },
-    type: "basic",
-  },
-  {
-    id: "2",
-    position: { x: 400, y: 200 },
-    data: { name: "Protein" },
-    type: "basic",
+    data: {
+      properties: {},
+    },
+    type: "custom",
   },
 ];
-const initialEdges = [
-  {
-    id: "e1-2",
-    source: "1",
-    target: "2",
-    type: "basic",
-  },
-];
+const initialEdges: Edge<EdgeData>[] = [];
 
 const defaultEdgeOptions = {
   animated: true,
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 20,
-    height: 20,
-    color: "#b1b1b7",
   },
 };
 
 export function Tool() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<Node<NodeData>>(initialNodes);
+  const [edges, setEdges, onEdgesChange] =
+    useEdgesState<Edge<EdgeData>>(initialEdges);
+  const { screenToFlowPosition } = useReactFlow();
+
+  function createEdge(source, target) {
+    const id = nanoid();
+    const edge = {
+      id,
+      type: "custom",
+      source,
+      target,
+      data: {
+        [nanoid()]: { properties: {} },
+      },
+    };
+    return edge;
+  }
 
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
+    (params) => {
+      const edge = createEdge(params.source, params.target);
+      setEdges((eds) => [...eds, edge]);
+      return edge;
+    },
     [setEdges]
   );
 
+  const onConnectEnd = useCallback(
+    (event, connectionState) => {
+      // when a connection is dropped on the pane it's not valid
+      if (!connectionState.isValid) {
+        // we need to remove the wrapper bounds, in order to get the correct position
+        const id = nanoid();
+        const { clientX, clientY } =
+          "changedTouches" in event ? event.changedTouches[0] : event;
+        const newNode: Node<NodeData> = {
+          id,
+          position: screenToFlowPosition({
+            x: clientX,
+            y: clientY,
+          }),
+          type: "custom",
+          data: { properties: {} },
+          origin: [0.5, 0.0],
+        };
+        setNodes((nds) => nds.concat(newNode as any));
+        const edge = createEdge(connectionState.fromNode.id, id);
+        setEdges((eds) => eds.concat(edge));
+      }
+    },
+    [screenToFlowPosition]
+  );
+
   return (
-    <ReactFlowProvider>
-      <div className="h-screen w-screen">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          defaultEdgeOptions={defaultEdgeOptions}
-        />
-        <Controls />
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-      </div>
-    </ReactFlowProvider>
+    <div className="h-full w-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onConnectEnd={onConnectEnd}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+        defaultEdgeOptions={defaultEdgeOptions}
+        proOptions={{ hideAttribution: true }}
+      />
+      <Controls />
+      <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+    </div>
   );
 }

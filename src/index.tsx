@@ -1,1 +1,1 @@
-export * from "./schema-builder/builder";
+export * from "./schema-builder/import-tool";
