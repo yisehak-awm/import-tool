@@ -25,6 +25,7 @@ const edgeTypes = {
 
 export type NodeData = {
   name?: string;
+  table?: string;
   properties: {
     [key: string]: {
       name: string;
@@ -38,6 +39,9 @@ export type EdgeData = {
   [key: string]: {
     name?: string;
     reversed?: boolean;
+    table?: string;
+    source?: string;
+    target?: string;
     properties: {
       [key: string]: {
         name: string;

@@ -3,7 +3,7 @@ import { useReactFlow } from "@xyflow/react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useContext, useEffect, useMemo } from "react";
 import DataTable, { useDataTable } from "../../components/ui/data-table";
 import { nanoid } from "nanoid";
 import { ArrowRight, Plus, Trash } from "lucide-react";
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { EdgeData, NodeData } from "./builder";
+import { Context } from "../context";
 
 function Form({
   id,
@@ -27,7 +28,14 @@ function Form({
   data: NodeData | EdgeData[string];
   element: "node" | "edge";
 }) {
+  const { dataSources } = useContext(Context);
   const { updateNodeData, updateEdgeData, getNode, getEdge } = useReactFlow();
+
+  useEffect(() => {
+    if (!dataSources.find((s) => s.id == data.table)) {
+      updateData(id, { table: undefined });
+    }
+  }, [dataSources]);
 
   const updateData = useCallback(
     element === "node"
@@ -74,6 +82,15 @@ function Form({
     });
   }
 
+  function handleTableChange(sourceId: string) {
+    const columns = dataSources.find((s) => s.id === sourceId).columns;
+    const properties: NodeData["properties"] = columns.reduce(
+      (acc, curr) => ({ ...acc, [nanoid()]: { col: curr } }),
+      {}
+    );
+    updateData(id, { table: sourceId, properties });
+  }
+
   const columns: ColumnDef<any>[] = [
     {
       id: "name",
@@ -92,23 +109,7 @@ function Form({
     {
       id: "col",
       header: "Column",
-      cell: ({ row }) => {
-        const { col, id: propId } = row.original;
-        return (
-          <Select
-            defaultValue={col}
-            onValueChange={(v) => updateProperty(propId, { col: v })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="chr">chr</SelectItem>
-              <SelectItem value="prt">prt</SelectItem>
-            </SelectContent>
-          </Select>
-        );
-      },
+      accessorKey: "col",
     },
     {
       id: "type",
@@ -164,53 +165,59 @@ function Form({
       </div>
       <div className="mb-4">
         <Label className="mb-2">Table</Label>
-        <Select>
+        <Select value={data.table} onValueChange={handleTableChange}>
           <SelectTrigger>
             <SelectValue placeholder="Select a table" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">table 1</SelectItem>
-            <SelectItem value="2">table 2</SelectItem>
-            <SelectItem value="3">table 3</SelectItem>
+            {dataSources.map((s) => (
+              <SelectItem value={s.id}>{s.file.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
-      {element === "edge" && (
+      {element === "edge" && data.table && (
         <div className="flex mb-4 items-end">
           <div>
             <Label className="mb-2">Source ID ({source})</Label>
-            <Select>
+            <Select
+              value={(data as EdgeData[string]).source}
+              onValueChange={(v) => updateData(id, { source: v })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select column" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">column 1</SelectItem>
-                <SelectItem value="2">column 2</SelectItem>
-                <SelectItem value="3">column 3</SelectItem>
+                {properties.map((p) => (
+                  <SelectItem value={p.col}>{p.col}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <ArrowRight className="inline mb-2 mx-4" />
           <div>
             <Label className="mb-2">Target ID ({target})</Label>
-            <Select>
+            <Select
+              value={(data as EdgeData[string]).target}
+              onValueChange={(v) => updateData(id, { target: v })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select column" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">column 1</SelectItem>
-                <SelectItem value="2">column 2</SelectItem>
-                <SelectItem value="3">column 3</SelectItem>
+                {properties.map((p) => (
+                  <SelectItem value={p.col}>{p.col}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
       )}
       <div className="flex flex-col ">
-        <DataTable table={table} />
-        <Button size="sm" variant="secondary" onClick={addProperty}>
+        {data.table && <DataTable table={table} />}
+        {/* <Button size="sm" variant="secondary" onClick={addProperty}>
           <Plus className="inline me-1" /> Add a property
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
