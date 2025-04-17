@@ -58,12 +58,12 @@ export default function BasicEdge(props) {
                   <Popover>
                     <PopoverTrigger>
                       {props.data[con].reversed ? (
-                        <button className="text-xs hover:border-foreground bg-background p-1 px-2 rounded-lg border font-mono">
+                        <button className="text-xs hover:border-foreground bg-background p-1 px-2 rounded-lg border font-mono text-orange-500 border-orange-500">
                           <ArrowLeft size={16} className="inline me-2" />
                           {label}
                         </button>
                       ) : (
-                        <button className="text-xs hover:border-foreground bg-background p-1 px-2 rounded-lg border font-mono">
+                        <button className="text-xs hover:border-foreground bg-background p-1 px-2 rounded-lg border font-mono text-orange-500 border-orange-500">
                           {label}
                           <ArrowRight size={16} className="ms-2 inline" />
                         </button>
