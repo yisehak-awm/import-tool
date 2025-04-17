@@ -93,20 +93,6 @@ function Form({
 
   const columns: ColumnDef<any>[] = [
     {
-      id: "name",
-      header: "Property",
-      cell: ({ row }) => {
-        const { name, id: propId } = row.original;
-        return (
-          <Input
-            defaultValue={name}
-            placeholder="Untitled"
-            onBlur={(e) => updateProperty(propId, { name: e.target.value })}
-          />
-        );
-      },
-    },
-    {
       id: "col",
       header: "Column",
       accessorKey: "col",
@@ -115,6 +101,20 @@ function Form({
           {row.original.col}
         </span>
       ),
+    },
+    {
+      id: "name",
+      header: "Rename to",
+      cell: ({ row }) => {
+        const { col, name, id: propId } = row.original;
+        return (
+          <Input
+            defaultValue={name}
+            placeholder={col}
+            onBlur={(e) => updateProperty(propId, { name: e.target.value })}
+          />
+        );
+      },
     },
     {
       id: "type",
@@ -170,7 +170,11 @@ function Form({
       </div>
       <div className="mb-4">
         <Label className="mb-2">Table</Label>
-        <Select value={data.table} onValueChange={handleTableChange}>
+        <Select
+          value={data.table}
+          onValueChange={handleTableChange}
+          disabled={!dataSources?.length}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select a table" />
           </SelectTrigger>
@@ -180,6 +184,9 @@ function Form({
             ))}
           </SelectContent>
         </Select>
+        {!dataSources?.length && (
+          <p className="text-orange-500 text-sm">Upload data sources first.</p>
+        )}
       </div>
       {element === "edge" && data.table && (
         <div className="flex mb-4 items-end">
