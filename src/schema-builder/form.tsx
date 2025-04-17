@@ -6,7 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { memo, useCallback, useContext, useEffect, useMemo } from "react";
 import DataTable, { useDataTable } from "../../components/ui/data-table";
 import { nanoid } from "nanoid";
-import { ArrowRight, Plus, Trash } from "lucide-react";
+import { ArrowRight, Trash } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -110,6 +110,11 @@ function Form({
       id: "col",
       header: "Column",
       accessorKey: "col",
+      cell: ({ row }) => (
+        <span className="p-2 py-1 border rounded bg-muted/50 font-mono text-sm">
+          {row.original.col}
+        </span>
+      ),
     },
     {
       id: "type",

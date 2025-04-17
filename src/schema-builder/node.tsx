@@ -29,7 +29,7 @@ export function BasicNode(props) {
       />
       <Popover>
         <PopoverTrigger className="flex items-center flex-col">
-          <div className="bg-background border p-4 px-8 flex justify-center items-center rounded-lg ">
+          <div className="bg-background border p-4 px-8 flex justify-center items-center rounded-lg font-mono">
             <h5>{label}</h5>
           </div>
         </PopoverTrigger>
