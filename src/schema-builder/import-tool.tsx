@@ -53,6 +53,8 @@ export function ImportTool() {
 
       readNextLine();
     });
+
+    file.current.value = null;
   }
 
   function removeSource(id: string) {
@@ -130,7 +132,7 @@ export function ImportTool() {
               ))}
             </Accordion>
             <div className="w-full absolute bottom-0 p-4">
-              <Button className="w-full shadow-lg">
+              <Button className="w-full shadow-lg" disabled>
                 <Play className="inline me-1" /> Run import
               </Button>
             </div>
