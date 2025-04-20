@@ -26,11 +26,13 @@ const edgeTypes = {
 export type NodeData = {
   name?: string;
   table?: string;
+  primaryKey?: string;
   properties: {
     [key: string]: {
       name: string;
       col: string;
       type: string;
+      checked?: boolean;
     };
   };
 };
@@ -42,11 +44,13 @@ export type EdgeData = {
     table?: string;
     source?: string;
     target?: string;
+    primaryKey?: string;
     properties: {
       [key: string]: {
         name: string;
         col: string;
         type: string;
+        checked?: boolean;
       };
     };
   };
