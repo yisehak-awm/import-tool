@@ -6,7 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { memo, useCallback, useContext, useEffect, useMemo } from "react";
 import DataTable, { useDataTable } from "../../components/ui/data-table";
 import { nanoid } from "nanoid";
-import { ArrowRight, Trash } from "lucide-react";
+import { ArrowRight, KeyRound } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,6 +16,8 @@ import {
 } from "../../components/ui/select";
 import { EdgeData, NodeData } from "./builder";
 import { Context } from "../context";
+import { Checkbox } from "../../components/ui/checkbox";
+import { DataTablePagination } from "../../components/ui/data-table/pagination";
 
 function Form({
   id,
@@ -93,6 +95,37 @@ function Form({
 
   const columns: ColumnDef<any>[] = [
     {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            Object.values(data.properties).every((p) => p.checked) ||
+            (Object.values(data.properties).some((p) => p.checked) &&
+              "indeterminate")
+          }
+          onCheckedChange={(value) => {
+            const update = Object.keys(data.properties).reduce((acc, k) => {
+              return {
+                ...acc,
+                [k]: { ...data.properties[k], checked: !!value },
+              };
+            }, {});
+            updateData(id, { properties: update });
+          }}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.original.checked}
+          onCheckedChange={(value) => {
+            updateProperty(row.original.id, { checked: !!value });
+          }}
+          aria-label="Select row"
+        />
+      ),
+    },
+    {
       id: "col",
       header: "Column",
       accessorKey: "col",
@@ -143,12 +176,21 @@ function Form({
       cell: ({ row }) => {
         return (
           <div className="grid gap-2">
-            <Button
+            {/* <Button
               size="icon"
               variant="ghost"
               onClick={(e) => removeProperty(row.original.id)}
             >
               <Trash className="inline" />
+            </Button> */}
+            <Button
+              size="icon"
+              variant={
+                data.primaryKey == row.original.id ? "default" : "outline"
+              }
+              onClick={() => updateData(id, { primaryKey: row.original.id })}
+            >
+              <KeyRound className="inline" />
             </Button>
           </div>
         );
@@ -226,7 +268,18 @@ function Form({
         </div>
       )}
       <div className="flex flex-col ">
-        {data.table && <DataTable table={table} />}
+        {data.table && (
+          <>
+            <DataTable table={table} />
+            <div className="mt-2 flex justify-between align-middle">
+              <div className="flex-1 text-sm text-muted-foreground">
+                {Object.values(data.properties).filter((p) => p.checked).length}{" "}
+                selected
+              </div>
+              <DataTablePagination table={table} />
+            </div>
+          </>
+        )}
         {/* <Button size="sm" variant="secondary" onClick={addProperty}>
           <Plus className="inline me-1" /> Add a property
         </Button> */}
