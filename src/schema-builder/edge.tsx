@@ -54,7 +54,7 @@ export default function BasicEdge(props) {
   } ${sourceY} A ${radiusX} ${radiusY} 0 0 1 ${midX} ${midY} A ${radiusX} ${radiusY} 0 0 1 ${
     targetX + 5
   } ${targetY}`;
-  const { updateEdge, updateEdgeData } = useReactFlow();
+  const { updateEdge, updateEdgeData, deleteElements } = useReactFlow();
 
   return (
     <>
@@ -80,6 +80,17 @@ export default function BasicEdge(props) {
                     key={con}
                     edgeId={id}
                     data={props.data[con]}
+                    onDelete={() => {
+                      const { [con]: removed, ...rest } = props.data;
+                      if (!Object.keys(rest).length) {
+                        return deleteElements({
+                          edges: [{ id }],
+                        });
+                      }
+                      updateEdge(id, {
+                        data: rest,
+                      });
+                    }}
                     onDataUpdate={(update) => {
                       updateEdgeData(id, {
                         [con]: { ...props.data[con], ...update },
@@ -116,7 +127,6 @@ export default function BasicEdge(props) {
 }
 
 function ConnectionLabel(props) {
-  const { updateEdge, deleteElements } = useReactFlow();
   const {
     name,
     reversed,
@@ -206,15 +216,7 @@ function ConnectionLabel(props) {
             variant="ghost"
             size="icon"
             onClick={() => {
-              updateEdge(props.edgeId, {
-                data: {
-                  ...props.data,
-                  [props.id]: {
-                    ...props.data[props.id],
-                    reversed: !(reversed || false),
-                  },
-                },
-              });
+              props.onDataUpdate({ reversed: !(reversed || false) });
             }}
           >
             <ArrowLeftRight className="inline" />
@@ -223,17 +225,7 @@ function ConnectionLabel(props) {
             variant="ghost"
             size="icon"
             className=" text-destructive"
-            onClick={() => {
-              const { [props.id]: removed, ...rest } = props.data;
-              if (!Object.keys(rest).length) {
-                return deleteElements({
-                  edges: [{ id: props.edgeId }],
-                });
-              }
-              updateEdge(props.edgeId, {
-                data: rest,
-              });
-            }}
+            onClick={props.onDelete}
           >
             <Trash className="inline" />
           </Button>
