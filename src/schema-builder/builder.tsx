@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 import {
+  applyNodeChanges,
   Background,
   BackgroundVariant,
   Controls,
@@ -97,6 +98,17 @@ export function Builder() {
     return false;
   }
 
+  const handleNodesChange = useCallback(
+    (changes) => {
+      const updatedNodes = applyNodeChanges(changes, nodes);
+      if (!updatedNodes.length) {
+        return setNodes(nodes);
+      }
+      setNodes(updatedNodes);
+    },
+    [nodes, setNodes]
+  );
+
   useEffect(() => {
     clearTimeout(validationTimeoutRef.current);
     validationTimeoutRef.current = setTimeout(() => {
@@ -166,7 +178,7 @@ export function Builder() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onConnectEnd={onConnectEnd}
