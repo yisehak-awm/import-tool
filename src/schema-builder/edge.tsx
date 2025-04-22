@@ -38,16 +38,34 @@ export default function BasicEdge(props) {
     sourcePosition,
     targetPosition,
   });
+
+  const isSelfClosing = props.source == props.target;
+  const radiusX = (sourceX - targetX) * 0.4;
+  const radiusY = 50;
+  const offset = 100;
+  const midX = (sourceX + targetX) / 2;
+  const midY = (sourceY + targetY) / 2 + offset;
+
+  const selfConnectingedgePath = `M ${
+    sourceX - 5
+  } ${sourceY} A ${radiusX} ${radiusY} 0 0 1 ${midX} ${midY} A ${radiusX} ${radiusY} 0 0 1 ${
+    targetX + 5
+  } ${targetY}`;
   const { updateEdge, deleteElements } = useReactFlow();
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} />
+      <BaseEdge
+        id={id}
+        path={isSelfClosing ? selfConnectingedgePath : edgePath}
+      />
       <EdgeLabelRenderer>
         <div
           className="pointer-events-auto absolute"
           style={{
-            transform: `translate(-75%, -50%) translate(${labelX}px,${labelY}px)`,
+            transform: `translate(-50%, ${
+              isSelfClosing ? 50 : 0
+            }px) translate(${labelX}px,${labelY}px)`,
           }}
         >
           <ul className="text-center">
