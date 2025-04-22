@@ -68,7 +68,7 @@ function Tool() {
         <div className="border-e w-[500px] relative h-full flex flex-col pb-16">
           <div className="px-4 mt-4">
             <div className="flex items-center">
-              <img src={logo} className="w-10 h-10 me-2" />
+              <img src={logo} className="w-10 h-10 me-4" />
               <div>
                 <h4 className="font-bold ">Data import tool</h4>
                 <p className="text-muted-foreground text-sm">
