@@ -35,7 +35,7 @@ function Form({
 
   useEffect(() => {
     if (!dataSources.find((s) => s.id == data.table)) {
-      updateData(id, { table: undefined });
+      updateData(id, { table: undefined, properties: {}, primaryKey: null });
     }
   }, [dataSources]);
 
