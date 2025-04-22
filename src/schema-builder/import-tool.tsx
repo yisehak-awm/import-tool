@@ -11,6 +11,7 @@ import {
 } from "../../components/ui/accordion";
 import { nanoid } from "nanoid";
 import { Context } from "../context";
+import logo from "../logo.png";
 
 export interface DataSource {
   id: string;
@@ -66,10 +67,15 @@ function Tool() {
       <div className="h-screen w-screen flex">
         <div className="border-e w-[500px] relative h-full flex flex-col pb-16">
           <div className="px-4 mt-4">
-            <h4 className="font-bold ">Data source</h4>
-            <p className="text-muted-foreground">
-              Upload .csv data source files
-            </p>
+            <div className="flex items-center">
+              <img src={logo} className="w-10 h-10 me-2" />
+              <div>
+                <h4 className="font-bold ">Data import tool</h4>
+                <p className="text-muted-foreground text-sm">
+                  Upload .csv data source files
+                </p>
+              </div>
+            </div>
           </div>
           <div className="p-4 my-2 flex flex-col items-center ">
             <Button
