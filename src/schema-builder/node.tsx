@@ -7,12 +7,61 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../components/ui/popover";
+import { clsx } from "clsx";
+import { useContext, useEffect, useMemo } from "react";
+import { NodeData } from "./builder";
+import { Context } from "../context";
 
 const handleStyle = { height: 20, width: 10 };
 
-export function BasicNode(props) {
-  const label = props.data.name || "Untitled";
-  const { deleteElements } = useReactFlow();
+export function BasicNode({ id, data }: { id: string; data: NodeData }) {
+  const { name, error, table, properties, primaryKey } = data;
+  const label = name || "Untitled";
+  const { deleteElements, updateNodeData } = useReactFlow();
+  const hasError = useMemo(
+    () => error && Object.values(error).some((e) => e),
+    [data]
+  );
+  const { dataSources } = useContext(Context);
+
+  const wrapperClass = clsx({
+    "border p-4 px-8 flex justify-center items-center rounded-lg font-mono":
+      true,
+    "bg-orange-500/5 border-orange-500 text-orange-500": hasError,
+    "bg-green-500/5 border-green-500 text-green-500": !hasError,
+  });
+
+  useEffect(() => {
+    if (!dataSources.find((d) => d.id === table)) {
+      updateNodeData(id, { table: null, properties: {}, primaryKey: null });
+    }
+  }, [dataSources]);
+
+  useEffect(() => {
+    const e = {};
+
+    if (!name) {
+      e["name"] = "Name required.";
+    }
+
+    if (!table) {
+      e["table"] = "Table required.";
+    }
+
+    if (Object.values(properties).some((p) => p.checked && !p.type)) {
+      e["properties"] = "Specify types for all selected properties.";
+    }
+
+    if (table && Object.values(properties).every((p) => !p.checked)) {
+      e["properties"] = "Select atleast one property";
+    }
+
+    if (table && !primaryKey) {
+      e["primaryKey"] = "Specify primary key.";
+    }
+
+    updateNodeData(id, { error: e });
+  }, [name, table, properties, primaryKey]);
 
   return (
     <>
@@ -29,7 +78,7 @@ export function BasicNode(props) {
       />
       <Popover>
         <PopoverTrigger className="flex items-center flex-col">
-          <div className="border p-4 px-8 flex justify-center items-center rounded-lg font-mono bg-orange-500/5 border-orange-500 text-orange-500">
+          <div className={wrapperClass}>
             <h5>{label}</h5>
           </div>
         </PopoverTrigger>
@@ -42,13 +91,22 @@ export function BasicNode(props) {
               variant="ghost"
               size="icon"
               className=" text-destructive"
-              onClick={() => deleteElements({ nodes: [{ id: props.id }] })}
+              onClick={() => deleteElements({ nodes: [{ id }] })}
             >
               <Trash className="inline" />
             </Button>
           </div>
           <div className="bg-background shadow-lg border rounded-lg p-4">
-            <Form id={props.id} data={props.data} element="node" />
+            {hasError && (
+              <div className="bg-red-500/5 border-destructive rounded-lg mb-4 p-8 py-2 text-destructive text-sm">
+                <ul className="list-disc">
+                  {Object.keys(error).map((k: string) =>
+                    error[k] ? <li key={k}>{error[k]}</li> : null
+                  )}
+                </ul>
+              </div>
+            )}
+            <Form id={id} data={data} element="node" />
           </div>
         </PopoverContent>
       </Popover>

@@ -27,6 +27,7 @@ export type NodeData = {
   name?: string;
   table?: string;
   primaryKey?: string;
+  error?: { [key: string]: string };
   properties: {
     [key: string]: {
       name: string;
@@ -45,6 +46,7 @@ export type EdgeData = {
     source?: string;
     target?: string;
     primaryKey?: string;
+    error?: { [key: string]: string };
     properties: {
       [key: string]: {
         name: string;
@@ -61,6 +63,7 @@ const initialNodes: Node<NodeData>[] = [
     id: "1",
     position: { x: 0, y: 0 },
     data: {
+      error: {},
       properties: {},
     },
     type: "custom",
