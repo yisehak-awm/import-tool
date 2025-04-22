@@ -110,7 +110,10 @@ function Form({
                 [k]: { ...data.properties[k], checked: !!value },
               };
             }, {});
-            updateData(id, { properties: update });
+            updateData(id, {
+              properties: update,
+              primaryKey: !!value ? data.primaryKey : null,
+            });
           }}
           aria-label="Select all"
         />
@@ -120,6 +123,11 @@ function Form({
           checked={row.original.checked}
           onCheckedChange={(value) => {
             updateProperty(row.original.id, { checked: !!value });
+            if (!value && data.primaryKey == row.original.id) {
+              updateData(id, {
+                primaryKey: null,
+              });
+            }
           }}
           aria-label="Select row"
         />
@@ -185,6 +193,7 @@ function Form({
             </Button> */}
             <Button
               size="icon"
+              disabled={!row.original.checked}
               variant={
                 data.primaryKey == row.original.id ? "default" : "outline"
               }
