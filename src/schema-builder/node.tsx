@@ -8,9 +8,8 @@ import {
   PopoverTrigger,
 } from "../../components/ui/popover";
 import { clsx } from "clsx";
-import { useContext, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { NodeData } from "./builder";
-import { Context } from "../context";
 
 const handleStyle = { height: 20, width: 10 };
 
@@ -22,7 +21,6 @@ export function BasicNode({ id, data }: { id: string; data: NodeData }) {
     () => error && Object.values(error).some((e) => e),
     [data]
   );
-  const { dataSources } = useContext(Context);
 
   const wrapperClass = clsx({
     "border p-4 px-8 flex justify-center items-center rounded-lg font-mono":
@@ -30,12 +28,6 @@ export function BasicNode({ id, data }: { id: string; data: NodeData }) {
     "bg-orange-500/5 border-orange-500 text-orange-500": hasError,
     "bg-green-500/5 border-green-500 text-green-500": !hasError,
   });
-
-  useEffect(() => {
-    if (!dataSources.find((d) => d.id === table)) {
-      updateNodeData(id, { table: null, properties: {}, primaryKey: null });
-    }
-  }, [dataSources]);
 
   useEffect(() => {
     const e = {};
