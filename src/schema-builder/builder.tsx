@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -14,6 +14,7 @@ import {
 import { BasicNode } from "./node";
 import BasicEdge from "./edge";
 import { nanoid } from "nanoid";
+import { Context } from "../context";
 
 const nodeTypes = {
   custom: BasicNode,
@@ -78,12 +79,38 @@ const defaultEdgeOptions = {
   },
 };
 
-export function Tool() {
+export function Builder() {
   const [nodes, setNodes, onNodesChange] =
     useNodesState<Node<NodeData>>(initialNodes);
   const [edges, setEdges, onEdgesChange] =
     useEdgesState<Edge<EdgeData>>(initialEdges);
   const { screenToFlowPosition } = useReactFlow();
+  const { setIsValid } = useContext(Context);
+  const validationTimeoutRef = useRef(null);
+
+  function hasTruthyProperties(obj) {
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key) && obj[key]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  useEffect(() => {
+    clearTimeout(validationTimeoutRef.current);
+    validationTimeoutRef.current = setTimeout(() => {
+      setIsValid(
+        !nodes.some((n) => hasTruthyProperties(n.data.error)) &&
+          !edges.some((e) =>
+            Object.values(e.data).some((v) => hasTruthyProperties(v.error))
+          )
+      );
+    }, 500);
+    return () => {
+      clearTimeout(validationTimeoutRef.current);
+    };
+  }, [nodes, edges]);
 
   function createEdge(source, target) {
     const id = nanoid();
