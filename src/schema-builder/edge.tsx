@@ -240,7 +240,7 @@ function ConnectionLabel(props) {
         </div>
         <div className="bg-background shadow-lg border rounded-lg p-4">
           {hasError && (
-            <div className="bg-red-500/5 border-destructive rounded-lg mb-4 p-8 py-2 text-destructive text-sm">
+            <div className="bg-orange-500/5 rounded-lg mb-4 p-8 py-2 text-orange-500 text-sm">
               <ul className="list-disc">
                 {Object.keys(error).map((k: string) =>
                   error[k] ? <li key={k}>{error[k]}</li> : null
