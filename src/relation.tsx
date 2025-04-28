@@ -1,9 +1,15 @@
-import { Button } from "../../components/ui/button";
+import { Button } from "../components/ui/button";
+import { nanoid } from "nanoid";
+import { useEffect, useMemo } from "react";
+import { clsx } from "clsx";
+import Form from "./form";
 import {
   BaseEdge,
+  Edge,
   EdgeLabelRenderer,
   getBezierPath,
   useReactFlow,
+  type EdgeProps,
 } from "@xyflow/react";
 import {
   ArrowLeft,
@@ -16,14 +22,30 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "../../components/ui/popover";
-import { nanoid } from "nanoid";
-import Form from "./form";
-import { useEffect, useMemo } from "react";
-import { EdgeData } from "./builder";
-import { clsx } from "clsx";
+} from "../components/ui/popover";
 
-export default function BasicEdge(props) {
+export type RelationData = {
+  [key: string]: {
+    name?: string;
+    reversed?: boolean;
+    table?: string;
+    source?: string;
+    target?: string;
+    primaryKey?: string;
+    error?: { [key: string]: string };
+    properties: {
+      [key: string]: {
+        name: string;
+        col: string;
+        type: string;
+        checked?: boolean;
+      };
+    };
+  };
+};
+
+export type Relation = Edge<RelationData>;
+export default function Relation(props: EdgeProps<Relation>) {
   const {
     id,
     sourceX,
@@ -33,41 +55,44 @@ export default function BasicEdge(props) {
     sourcePosition,
     targetPosition,
   } = props;
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-  });
-
-  const isSelfClosing = props.source == props.target;
-  const radiusX = (sourceX - targetX) * 0.4;
-  const radiusY = 50;
-  const offset = 100;
-  const midX = (sourceX + targetX) / 2;
-  const midY = (sourceY + targetY) / 2 + offset;
-
-  const selfConnectingedgePath = `M ${
-    sourceX - 5
-  } ${sourceY} A ${radiusX} ${radiusY} 0 0 1 ${midX} ${midY} A ${radiusX} ${radiusY} 0 0 1 ${
-    targetX + 5
-  } ${targetY}`;
   const { updateEdge, updateEdgeData, deleteElements } = useReactFlow();
+  const [path, labelX, labelY] = useMemo(() => {
+    const radiusY = 50;
+    const offset = 100;
+    const radiusX = (sourceX - targetX) * 0.4;
+    const midX = (sourceX + targetX) / 2;
+    const midY = (sourceY + targetY) / 2 + offset;
+
+    const [line, labelX, labelY] = getBezierPath({
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      sourcePosition,
+      targetPosition,
+    });
+
+    if (props.source == props.target) {
+      const loop = `M ${
+        sourceX - 5
+      } ${sourceY} A ${radiusX} ${radiusY} 0 0 1 ${midX} ${midY} A ${radiusX} ${radiusY} 0 0 1 ${
+        targetX + 5
+      } ${targetY}`;
+      return [loop, labelX, labelY];
+    }
+
+    return [line, labelX, labelY];
+  }, [sourceX, sourceY, targetX, targetY]);
 
   return (
     <>
-      <BaseEdge
-        id={id}
-        path={isSelfClosing ? selfConnectingedgePath : edgePath}
-      />
+      <BaseEdge id={id} path={path} />
       <EdgeLabelRenderer>
         <div
           className="pointer-events-auto absolute"
           style={{
             transform: `translate(-50%, ${
-              isSelfClosing ? 50 : 0
+              props.source == props.target ? 50 : 0
             }px) translate(${labelX}px,${labelY}px)`,
           }}
         >
@@ -127,6 +152,7 @@ export default function BasicEdge(props) {
 }
 
 function ConnectionLabel(props) {
+  const { id, edgeId, data, onDataUpdate, onDelete } = props;
   const {
     name,
     reversed,
@@ -136,7 +162,7 @@ function ConnectionLabel(props) {
     primaryKey,
     source,
     target,
-  } = props.data as EdgeData[string];
+  } = data as RelationData[string];
   const label = name || "Untitled";
 
   const hasError = useMemo(
@@ -151,46 +177,36 @@ function ConnectionLabel(props) {
     "text-green-500 border-green-500": !hasError,
   });
 
-  useEffect(() => {
+  function validate() {
     const e = {};
+    const values = Object.values(properties);
+    if (!name) e["name"] = "Name required.";
+    if (!table) e["table"] = "Table required.";
 
-    if (!name) {
-      e["name"] = "Name required.";
-    }
-
-    if (!table) {
-      e["table"] = "Table required.";
-    }
-
-    if (
-      properties &&
-      Object.values(properties).some((p) => p.checked && !p.type)
-    ) {
+    if (properties && values.some((p) => p.checked && !p.type)) {
       e["properties"] = "Specify types for all selected properties.";
     }
 
-    if (properties && Object.values(properties).every((p) => !p.checked)) {
+    if (properties && values.every((p) => !p.checked)) {
       e["properties"] = "Select atleast one property";
     }
 
-    if (table && !primaryKey) {
-      e["primaryKey"] = "Specify primary key.";
-    }
+    if (table && !primaryKey) e["primaryKey"] = "Specify primary key.";
+    if (table && !primaryKey) e["primaryKey"] = "Specify primary key.";
+    if (table && !source) e["source"] = "Specify source.";
+    if (table && !target) e["target"] = "Specify target.";
+    onDataUpdate({ error: e });
+  }
 
-    if (table && !primaryKey) {
-      e["primaryKey"] = "Specify primary key.";
-    }
-
-    if (table && !source) {
-      e["source"] = "Specify source.";
-    }
-
-    if (table && !target) {
-      e["target"] = "Specify target.";
-    }
-
-    props.onDataUpdate({ error: e });
-  }, [name, reversed, table, properties, primaryKey, source, target]);
+  useEffect(validate, [
+    name,
+    reversed,
+    table,
+    properties,
+    primaryKey,
+    source,
+    target,
+  ]);
 
   return (
     <Popover>
@@ -216,7 +232,7 @@ function ConnectionLabel(props) {
             variant="ghost"
             size="icon"
             onClick={() => {
-              props.onDataUpdate({ reversed: !(reversed || false) });
+              onDataUpdate({ reversed: !(reversed || false) });
             }}
           >
             <ArrowLeftRight className="inline" />
@@ -225,7 +241,7 @@ function ConnectionLabel(props) {
             variant="ghost"
             size="icon"
             className=" text-destructive"
-            onClick={props.onDelete}
+            onClick={onDelete}
           >
             <Trash className="inline" />
           </Button>
@@ -241,10 +257,9 @@ function ConnectionLabel(props) {
             </div>
           )}
           <Form
-            id={props.edgeId}
-            subid={props.id}
-            data={props.data}
-            element="edge"
+            id={edgeId}
+            data={data}
+            onUpdate={(update) => onDataUpdate(update)}
           />
         </div>
       </PopoverContent>

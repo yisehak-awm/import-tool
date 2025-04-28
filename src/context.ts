@@ -1,11 +1,22 @@
+import { ReactFlowJsonObject } from "@xyflow/react";
 import { createContext } from "react";
-import { DataSource } from "./schema-builder/import-tool";
+
+export interface DataSource {
+  id: string;
+  file: File;
+  columns: string[];
+  sampleRow: string[];
+}
+
+export interface Schema extends ReactFlowJsonObject {}
 
 interface ContextData {
   dataSources: DataSource[];
-  setDataSources: Function;
+  setDataSources: React.Dispatch<React.SetStateAction<DataSource[]>>;
   isValid: boolean;
-  setIsValid: Function;
+  setIsValid: React.Dispatch<React.SetStateAction<boolean>>;
+  schema: Schema | null;
+  setSchema: React.Dispatch<React.SetStateAction<Schema>>;
 }
 
 const defaultValues: ContextData = {
@@ -13,6 +24,9 @@ const defaultValues: ContextData = {
   setDataSources: () => {},
   isValid: false,
   setIsValid: () => {},
+  schema: null,
+  setSchema: () => {},
 };
 
-export const Context = createContext<ContextData>(defaultValues);
+const Context = createContext<ContextData>(defaultValues);
+export default Context;

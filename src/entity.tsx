@@ -1,26 +1,42 @@
-import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { Button } from "../../components/ui/button";
+import { Handle, Position, useReactFlow, Node, NodeProps } from "@xyflow/react";
+import { Button } from "../components/ui/button";
+import { useEffect, useMemo } from "react";
 import { Trash } from "lucide-react";
+import { clsx } from "clsx";
 import Form from "./form";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "../../components/ui/popover";
-import { clsx } from "clsx";
-import { useEffect, useMemo } from "react";
-import { NodeData } from "./builder";
+} from "../components/ui/popover";
 
 const handleStyle = { height: 20, width: 10 };
 
-export function BasicNode({ id, data }: { id: string; data: NodeData }) {
-  const { name, error, table, properties, primaryKey } = data;
-  const label = name || "Untitled";
+export type EntityData = {
+  name?: string;
+  table?: string;
+  primaryKey?: string;
+  error?: { [key: string]: string };
+  properties: {
+    [key: string]: {
+      name: string;
+      col: string;
+      type: string;
+      checked?: boolean;
+    };
+  };
+};
+export type Entity = Node<EntityData>;
+export default function Entity(props: NodeProps<Entity>) {
   const { deleteElements, updateNodeData } = useReactFlow();
+
+  const { id, data } = props;
+  const { name, error, table, properties, primaryKey } = data;
   const hasError = useMemo(
     () => error && Object.values(error).some((e) => e),
     [data]
   );
+  const label = name || "Untitled";
 
   const wrapperClass = clsx({
     "border p-4 px-8 flex justify-center items-center rounded-lg font-mono":
@@ -29,31 +45,25 @@ export function BasicNode({ id, data }: { id: string; data: NodeData }) {
     "bg-green-500/5 border-green-500 text-green-500": !hasError,
   });
 
-  useEffect(() => {
+  function validate() {
     const e = {};
+    const values = Object.values(properties);
+    if (!name) e["name"] = "Name required.";
+    if (!table) e["table"] = "Table required.";
 
-    if (!name) {
-      e["name"] = "Name required.";
-    }
-
-    if (!table) {
-      e["table"] = "Table required.";
-    }
-
-    if (Object.values(properties).some((p) => p.checked && !p.type)) {
+    if (values.some((p) => p.checked && !p.type)) {
       e["properties"] = "Specify types for all selected properties.";
     }
 
-    if (table && Object.values(properties).every((p) => !p.checked)) {
+    if (table && values.every((p) => !p.checked)) {
       e["properties"] = "Select atleast one property";
     }
 
-    if (table && !primaryKey) {
-      e["primaryKey"] = "Specify primary key.";
-    }
-
+    if (table && !primaryKey) e["primaryKey"] = "Specify primary key.";
     updateNodeData(id, { error: e });
-  }, [name, table, properties, primaryKey]);
+  }
+
+  useEffect(validate, [name, table, properties, primaryKey]);
 
   return (
     <>
@@ -98,7 +108,11 @@ export function BasicNode({ id, data }: { id: string; data: NodeData }) {
                 </ul>
               </div>
             )}
-            <Form id={id} data={data} element="node" />
+            <Form
+              id={id}
+              data={data}
+              onUpdate={(update) => updateNodeData(id, update)}
+            />
           </div>
         </PopoverContent>
       </Popover>
