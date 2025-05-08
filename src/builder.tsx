@@ -100,7 +100,7 @@ function Builder() {
   );
 
   return (
-    <div className="h-full w-full">
+    <div className="schema-builder-wrapper h-full w-full">
       <ReactFlow
         fitView
         nodes={nodes}
@@ -120,7 +120,12 @@ function Builder() {
         }}
       />
       <Controls />
-      <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+      <Background
+        patternClassName="sb-bg"
+        variant={BackgroundVariant.Dots}
+        gap={12}
+        size={1}
+      />
     </div>
   );
 }
