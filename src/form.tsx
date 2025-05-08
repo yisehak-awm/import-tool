@@ -146,9 +146,9 @@ function Form({ id, data, onUpdate }: FormProps) {
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="str">str</SelectItem>
+              <SelectItem value="text">text</SelectItem>
               <SelectItem value="int">int</SelectItem>
-              <SelectItem value="enum">enum</SelectItem>
+              <SelectItem value="double">double</SelectItem>
             </SelectContent>
           </Select>
         );
