@@ -98,7 +98,7 @@ export default function Entity(props: NodeProps<Entity>) {
               <Trash className="inline" />
             </Button>
           </div>
-          <div className="bg-background shadow-lg border rounded-lg p-4">
+          <div className="bg-background shadow-lg border rounded-lg p-4 max-h-[75vh] overflow-y-auto">
             {hasError && (
               <div className="bg-orange-500/5 rounded-lg mb-4 p-8 py-2 text-orange-500 text-sm">
                 <ul className="list-disc">

@@ -253,7 +253,6 @@ function Form({ id, data, onUpdate }: FormProps) {
                 {Object.values(data.properties).filter((p) => p.checked).length}{" "}
                 selected
               </div>
-              <DataTablePagination table={table} />
             </div>
           </>
         )}
