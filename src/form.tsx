@@ -30,7 +30,7 @@ function Form({ id, data, onUpdate }: FormProps) {
   const { getNode, getEdge } = useReactFlow();
   const { dataSources } = useContext(Context);
   const edge = useMemo(() => getEdge(id) as Relation, [id]);
-  const reversed = edge?.data.reversed;
+  const reversed = edge && (data as RelationData[string]).reversed;
 
   const properties = useMemo(() => {
     const keys = Object.keys(data.properties);
