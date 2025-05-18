@@ -61,7 +61,7 @@ function Form({ id, data, onUpdate }: FormProps) {
   function handleTableChange(sourceId: string) {
     const columns = dataSources.find((s) => s.id === sourceId).columns;
     const properties = columns.reduce(
-      (a, col) => ({ ...a, [nanoid()]: { col } }),
+      (a, col) => ({ ...a, [nanoid()]: { col, checked: true, type: "text" } }),
       {}
     );
     onUpdate({ table: sourceId, properties });
