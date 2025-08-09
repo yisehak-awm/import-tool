@@ -1,5 +1,7 @@
 import { ReactFlowJsonObject } from "@xyflow/react";
 import { createContext } from "react";
+import { Entity } from "./entity";
+import { Relation } from "./relation";
 
 export interface DataSource {
   id: string;
@@ -8,7 +10,7 @@ export interface DataSource {
   sampleRow: string[];
 }
 
-export interface Schema extends ReactFlowJsonObject {}
+export interface Schema extends ReactFlowJsonObject<Entity, Relation> {}
 
 interface ContextData {
   dataSources: DataSource[];

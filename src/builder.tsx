@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import Entity, { EntityData } from "./entity";
 import Context from "./context";
 import { nanoid } from "nanoid";
@@ -20,8 +20,16 @@ import {
   useNodesState,
   useReactFlow,
 } from "@xyflow/react";
+import ELK from "elkjs";
 
-const initialNodes: Node<EntityData>[] = [
+const layoutOptions = {
+  "elk.algorithm": "layered",
+  "elk.direction": "RIGHT",
+  "elk.layered.spacing.nodeNodeBetweenLayers": 300,
+  "elk.spacing.nodeNode": 200,
+};
+
+const starterNode: Node<EntityData>[] = [
   {
     id: "1",
     type: "entity",
@@ -32,14 +40,54 @@ const initialNodes: Node<EntityData>[] = [
   },
 ];
 
-function Builder() {
+function Builder({
+  initialNodes,
+  initialEdges,
+}: {
+  initialNodes?: Node<EntityData>[];
+  initialEdges?: Edge<RelationData>[];
+}) {
   const { setIsValid, setSchema } = useContext(Context);
   const validationTimeoutRef = useRef(null);
-  const { screenToFlowPosition, toObject } = useReactFlow();
-  const [nodes, setNodes] = useNodesState<Node<EntityData>>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<RelationData>>(
-    []
+  const { screenToFlowPosition, toObject, fitView } = useReactFlow();
+  const [nodes, setNodes] = useNodesState<Node<EntityData>>(
+    initialNodes || starterNode
   );
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<RelationData>>(
+    initialEdges || []
+  );
+  const elk = useMemo(() => new ELK(), []);
+
+  const applyLayout = useCallback(
+    async function (nds: Node<EntityData>[], eds: Edge<RelationData>[]) {
+      const graph = {
+        id: "Y",
+        layoutOptions,
+        edges: eds,
+        children: nds.map((n) => ({
+          ...n,
+        })),
+      };
+      await elk.layout(graph as any).then(({ children }: any) => {
+        setNodes(
+          children.map((n: any) => ({
+            id: n.id,
+            type: n.type,
+            position: { x: n.x, y: n.y },
+            data: n.data,
+          }))
+        );
+        setEdges(eds);
+      });
+      fitView();
+    },
+    [nodes.length, edges.length]
+  );
+
+  useEffect(() => {
+    if (!initialEdges?.length) return;
+    applyLayout(initialNodes, initialEdges);
+  }, [initialNodes, initialEdges]);
 
   const handleNodesChange = useCallback(
     (changes) => {
@@ -152,10 +200,16 @@ function createEdge(source, target) {
   return edge;
 }
 
-export default function SchemaBuilder() {
+export default function SchemaBuilder({
+  initialNodes,
+  initialEdges,
+}: {
+  initialNodes?: Node<EntityData>[];
+  initialEdges?: Edge<RelationData>[];
+}) {
   return (
     <ReactFlowProvider>
-      <Builder />
+      <Builder initialNodes={initialNodes} initialEdges={initialEdges} />
     </ReactFlowProvider>
   );
 }

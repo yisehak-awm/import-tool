@@ -19,7 +19,7 @@ export type EntityData = {
   error?: { [key: string]: string };
   properties: {
     [key: string]: {
-      name: string;
+      name?: string;
       col: string;
       type: string;
       checked?: boolean;
