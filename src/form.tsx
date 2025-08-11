@@ -67,118 +67,115 @@ function Form({ id, data, onUpdate }: FormProps) {
     onUpdate({ table: sourceId, properties });
   }
 
-  const columns: ColumnDef<any>[] = useMemo(
-    () => [
-      {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              Object.values(data.properties).every((p) => p.checked) ||
-              (Object.values(data.properties).some((p) => p.checked)
-                ? "indeterminate"
-                : false)
-            }
-            onCheckedChange={(value) => {
-              const update = Object.keys(data.properties).reduce((acc, k) => {
-                return {
-                  ...acc,
-                  [k]: { ...data.properties[k], checked: !!value },
-                };
-              }, {});
+  const columns: ColumnDef<any>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            Object.values(data.properties).every((p) => p.checked) ||
+            (Object.values(data.properties).some((p) => p.checked)
+              ? "indeterminate"
+              : false)
+          }
+          onCheckedChange={(value) => {
+            const update = Object.keys(data.properties).reduce((acc, k) => {
+              return {
+                ...acc,
+                [k]: { ...data.properties[k], checked: !!value },
+              };
+            }, {});
+            onUpdate({
+              properties: update,
+              primaryKey: !!value ? data.primaryKey : null,
+            });
+          }}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.original.checked}
+          onCheckedChange={(value) => {
+            updateProperty(row.original.id, { checked: !!value });
+            if (!value && data.primaryKey == row.original.id) {
               onUpdate({
-                properties: update,
-                primaryKey: !!value ? data.primaryKey : null,
+                primaryKey: null,
               });
-            }}
-            aria-label="Select all"
+            }
+          }}
+          aria-label="Select row"
+        />
+      ),
+    },
+    {
+      id: "col",
+      header: "Column",
+      accessorKey: "col",
+      cell: ({ row }) => (
+        <span className="p-2 py-1 border rounded bg-muted/50 font-mono text-sm">
+          {row.original.col}
+        </span>
+      ),
+    },
+    {
+      id: "name",
+      header: "Rename to",
+      cell: ({ row }) => {
+        const { col, name, id: propId } = row.original;
+        return (
+          <Input
+            defaultValue={name}
+            placeholder={col}
+            onBlur={(e) => updateProperty(propId, { name: e.target.value })}
           />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.original.checked}
-            onCheckedChange={(value) => {
-              updateProperty(row.original.id, { checked: !!value });
-              if (!value && data.primaryKey == row.original.id) {
-                onUpdate({
-                  primaryKey: null,
-                });
+        );
+      },
+    },
+    {
+      id: "type",
+      header: "Data type",
+      cell: ({ row }) => {
+        const { type, id: propId } = row.original;
+        return (
+          <Select
+            defaultValue={type}
+            onValueChange={(v) => updateProperty(propId, { type: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="text">text</SelectItem>
+              <SelectItem value="int">int</SelectItem>
+              <SelectItem value="double">double</SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        return edge ? (
+          <></>
+        ) : (
+          <div className="grid gap-2">
+            <Button
+              size="icon"
+              disabled={!row.original.checked}
+              variant={
+                data.primaryKey == row.original.id ? "default" : "outline"
               }
-            }}
-            aria-label="Select row"
-          />
-        ),
-      },
-      {
-        id: "col",
-        header: "Column",
-        accessorKey: "col",
-        cell: ({ row }) => (
-          <span className="p-2 py-1 border rounded bg-muted/50 font-mono text-sm">
-            {row.original.col}
-          </span>
-        ),
-      },
-      {
-        id: "name",
-        header: "Rename to",
-        cell: ({ row }) => {
-          const { col, name, id: propId } = row.original;
-          return (
-            <Input
-              defaultValue={name}
-              placeholder={col}
-              onBlur={(e) => updateProperty(propId, { name: e.target.value })}
-            />
-          );
-        },
-      },
-      {
-        id: "type",
-        header: "Data type",
-        cell: ({ row }) => {
-          const { type, id: propId } = row.original;
-          return (
-            <Select
-              defaultValue={type}
-              onValueChange={(v) => updateProperty(propId, { type: v })}
+              onClick={() => onUpdate({ primaryKey: row.original.id })}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">text</SelectItem>
-                <SelectItem value="int">int</SelectItem>
-                <SelectItem value="double">double</SelectItem>
-              </SelectContent>
-            </Select>
-          );
-        },
+              <KeyRound className="inline" />
+            </Button>
+          </div>
+        );
       },
-      {
-        id: "actions",
-        cell: ({ row }) => {
-          return edge ? (
-            <></>
-          ) : (
-            <div className="grid gap-2">
-              <Button
-                size="icon"
-                disabled={!row.original.checked}
-                variant={
-                  data.primaryKey == row.original.id ? "default" : "outline"
-                }
-                onClick={() => onUpdate({ primaryKey: row.original.id })}
-              >
-                <KeyRound className="inline" />
-              </Button>
-            </div>
-          );
-        },
-      },
-    ],
-    [edge]
-  );
+    },
+  ];
 
   const table = useDataTable(columns as any, properties);
   return (
