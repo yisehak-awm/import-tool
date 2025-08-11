@@ -191,8 +191,6 @@ function ConnectionLabel(props) {
       e["properties"] = "Select atleast one property";
     }
 
-    if (table && !primaryKey) e["primaryKey"] = "Specify primary key.";
-    if (table && !primaryKey) e["primaryKey"] = "Specify primary key.";
     if (table && !source) e["source"] = "Specify source.";
     if (table && !target) e["target"] = "Specify target.";
     onDataUpdate({ error: e });
