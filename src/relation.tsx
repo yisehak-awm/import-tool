@@ -181,10 +181,19 @@ function ConnectionLabel(props) {
     const e = {};
     const values = Object.values(properties);
     if (!name) e["name"] = "Name required.";
+    if (name && name.includes(" "))
+      e["name"] = "Name should not include spaces.";
     if (!table) e["table"] = "Table required.";
 
     if (properties && values.some((p) => p.checked && !p.type)) {
       e["properties"] = "Specify types for all selected properties.";
+    }
+
+    if (
+      properties &&
+      values.some((p) => p.checked && p.name && p.name.includes(" "))
+    ) {
+      e["properties"] = "Property names should not include spaces.";
     }
 
     if (properties && values.every((p) => !p.checked)) {
