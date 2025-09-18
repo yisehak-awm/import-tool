@@ -1,5 +1,5 @@
 {
-  "name": "@yisehak-awm/schema-builder",
+  "name": "@rejuve-bio/schema-builder",
   "version": "0.0.8",
   "description": "Annotation schema builder",
   "main": "dist/index.js",
